@@ -1,4 +1,21 @@
+<<<<<<< HEAD
+=======
+# Python
+>>>>>>> 6da98a31c8e0d65a09dbabf6de37dbd06a4e126d
 venv/
 __pycache__/
 *.pyc
 .env
+<<<<<<< HEAD
+=======
+
+# Node
+node_modules/
+dist/
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+>>>>>>> 6da98a31c8e0d65a09dbabf6de37dbd06a4e126d
