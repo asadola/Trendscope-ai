@@ -5,6 +5,7 @@ from app.crawlers.base import BaseCrawler
 from app.extractors.article_extractor import extract_article
 from app.utils.text_cleaner import clean_text
 from app.utils.dedup import content_hash
+from app.models.raw_event import RawEvent
 
 
 class NewsDeepCrawler(BaseCrawler):
@@ -58,7 +59,18 @@ class NewsDeepCrawler(BaseCrawler):
 
 
                     
-                    results.append(article)
+                    results.append(
+    RawEvent(
+        source="news_deep",
+        url=link,
+        title=article.get("title", ""),
+        content=article.get("content"),
+        author=article.get("author"),
+        timestamp=article.get("published_at"),
+        engagement=None,
+        metadata={"seed": seed},
+    )
+)
 
                 except Exception:
                     continue

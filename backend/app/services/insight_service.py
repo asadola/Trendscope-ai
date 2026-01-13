@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from datetime import datetime, timedelta
 
 from app.db.session import SessionLocal
 from app.db.models import TopicInsightDB
@@ -18,12 +19,24 @@ def get_insight(topic: str):
             .first()
         )
 
-        if insight:
-            return insight
+        # ✅ reuse insight if still fresh (6 hours)
+        if insight and insight.created_at:
+            age = datetime.utcnow() - insight.created_at
+            if age < timedelta(hours=6):
+                return insight
 
-        articles = fetch_articles_for_topic(topic)
+        # 🔥 analyze a controlled, diverse set
+        articles = fetch_articles_for_topic(
+            topic=topic,
+            limit=15,          # analyze more than before
+            include_old=False  # only fresh news
+        )
+
+        if not articles:
+            return insight  # fallback safely
+
         insight = build_topic_insight(topic, articles, db)
-
         return insight
+
     finally:
         db.close()

@@ -2,7 +2,8 @@ from app.db.session import engine
 from app.db.models import Base
 
 # 🔥 CRITICAL: IMPORT ALL MODELS
-from app.db.models import RawEventDB, CleanEventDB, TopicInsightDB
+from app.db.models import RawEventDB, CleanEventDB, TopicInsightDB, SubscriberDB
+
 
 def main():
     print("Creating database tables...")

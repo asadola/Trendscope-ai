@@ -2,7 +2,9 @@ from sqlalchemy.orm import Session
 from app.db.models import TopicInsightDB
 from app.services.article_service import fetch_articles_for_topic
 from app.ai.local_llm import LocalLLM
+from app.db.models import CleanEventDB
 from app.services.trend_metrics import compute_insight_confidence
+
 
 import json
 import re
@@ -88,3 +90,25 @@ Return this exact structure:
     db.refresh(insight)
 
     return insight
+def refresh_stale_insights(db, max_age_hours: int = 6):
+    """
+    Refresh AI insights that are older than `max_age_hours`.
+    Used by background workers.
+    """
+
+    cutoff = datetime.utcnow() - timedelta(hours=max_age_hours)
+
+    topics = (
+        db.query(CleanEventDB.topic)
+        .group_by(CleanEventDB.topic)
+        .all()
+    )
+
+    refreshed = 0
+
+    for (topic,) in topics:
+        # get_or_build handles caching internally
+        get_or_build_topic_insight(db, topic)
+        refreshed += 1
+
+    print(f"🤖 Refreshed AI insights for {refreshed} topics")

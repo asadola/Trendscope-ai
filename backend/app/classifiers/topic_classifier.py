@@ -1,6 +1,6 @@
 from collections import defaultdict
-
 from app.classifiers.keyword_extractor import extract_keywords
+
 
 CATEGORIES = {
     "finance": [
@@ -107,7 +107,7 @@ CATEGORIES = {
     ],
     "ai": [
         "ai",
-        "airtificial intelligence",
+        "artificial intelligence",
         "machine learning",
         "neural network",
         "algorithm",
@@ -133,9 +133,10 @@ CATEGORIES = {
 
 
 def classify_topic(text: str):
-    if not text:
+    # ✅ absolute safety
+    if not text or not text.strip():
         return {
-            "category": "unknown",
+            "category": "general",
             "confidence": 0.0,
             "keywords": [],
         }
@@ -143,28 +144,55 @@ def classify_topic(text: str):
     text_lower = text.lower()
     scores = defaultdict(int)
 
+    # 1️⃣ keyword scoring
     for category, keywords in CATEGORIES.items():
         for kw in keywords:
-            if kw in text_lower:
-                scores[category] += 1
+            if " " in kw:
+                if all(token in text_lower for token in kw.split()):
+                    scores[category] += 2
+            else:
+                if kw in text_lower:
+                    scores[category] += 1
 
-    if not scores:
+    # 2️⃣ ALWAYS extract keywords
+    extracted = extract_keywords(text_lower)[:15]
+
+    # 3️⃣ no strong match → heuristic rescue
+    if not scores or max(scores.values()) < 2:
+        if any(k in extracted for k in ["ai", "model", "algorithm", "llm"]):
+            return {
+                "category": "ai",
+                "confidence": 0.35,
+                "keywords": extracted,
+            }
+
+        if any(k in extracted for k in ["law", "bill", "regulation", "policy"]):
+            return {
+                "category": "politics",
+                "confidence": 0.35,
+                "keywords": extracted,
+            }
+
         return {
-            "category": "unknown",
-            "confidence": 0.0,
-            "keywords": extract_keywords(text_lower)[:10],
+            "category": "general",
+            "confidence": 0.25,
+            "keywords": extracted,
         }
 
+    # 4️⃣ strong match
     category = max(scores, key=scores.get)
-    total = sum(scores.values())
-    confidence = scores[category] / total if total else 0.0
+    max_score = scores[category]
+    second_best = sorted(scores.values(), reverse=True)[1] if len(scores) > 1 else 0
+
+    confidence = round(
+        max(0.4, (max_score - second_best) / max_score),
+        2
+    )
 
     matched_keywords = [kw for kw in CATEGORIES[category] if kw in text_lower]
 
-    dynamic_keywords = extract_keywords(text_lower)
-
     return {
         "category": category,
-        "confidence": round(confidence, 2),
-        "keywords": list(dict.fromkeys(matched_keywords + dynamic_keywords))[:15],
+        "confidence": confidence,
+        "keywords": list(dict.fromkeys(matched_keywords + extracted))[:15],
     }

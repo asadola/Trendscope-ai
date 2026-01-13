@@ -1,3 +1,4 @@
+from datetime import datetime
 from sqlalchemy.orm import Session
 from app.db.models import RawEventDB, CleanEventDB
 from app.models.raw_event import RawEvent
@@ -25,6 +26,7 @@ class EventsRepository:
             source=event.source,
             clean_text=event.clean_text,
             language=event.language,
+            ingested_at=datetime.utcnow(),
             timestamp=event.timestamp,
             published_at=event.published_at,
             engagement=event.engagement,

@@ -15,4 +15,16 @@ export default {
         },
     },
     plugins: [],
+
+    extend: {
+        colors: {
+            brand: "#4F46E5",
+            accent: "#F97316",
+            success: "#22C55E",
+        },
+        boxShadow: {
+            soft: "0 10px 30px rgba(0,0,0,0.08)",
+        },
+    }
+
 };

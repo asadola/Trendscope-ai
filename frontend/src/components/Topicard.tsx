@@ -1,67 +1,61 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { TopicVelocity } from "../types/topic";
+import { getUnsplashImage } from "../utils/unsplash";
+import { getTopicDescription } from "../utils/getTopicDescription";
 
-type Props = {
-    data: TopicVelocity;
-};
-
-export default function TopicCard(props: Props) {
-    const { data } = props;
+export default function Topicard({
+    topic,
+    article_count,
+    insight,
+}: {
+    topic: string;
+    article_count: number;
+    insight?: string;
+}) {
     const navigate = useNavigate();
+    const [image, setImage] = useState<string | null>(null);
 
-    const hotnessColor =
-        data.hotness >= 2 ? "text-red-600" :
-            data.hotness >= 1 ? "text-orange-500" :
-                "text-slate-400";
-
-
-    const color =
-        data.status === "breaking"
-            ? "border-red-500"
-            : data.status === "trending"
-                ? "border-yellow-500"
-                : "border-gray-300";
+    useEffect(() => {
+        getUnsplashImage(topic).then(setImage);
+    }, [topic]);
 
     return (
-        <div
-            onClick={() => navigate(`/topic/${data.topic}`)}
-            className={`card p-4 border-l-4 ${color}
-    cursor-pointer
-    transition-all duration-200
-    hover:-translate-y-1 hover:shadow-lg`}
+        <article
+            onClick={() => navigate(`/topic/${topic}`)}
+            className="group cursor-pointer bg-white rounded-3xl overflow-hidden shadow-soft hover:shadow-xl transition"
         >
-
-            <h3 className="font-semibold text-lg capitalize">
-                {data.topic}
-            </h3>
-
-            <p className="muted mt-1">
-                {data.article_count} articles
-            </p>
-            <div className="mt-3 flex items-center justify-between text-sm">
-                <span className="muted">{data.article_count} articles</span>
-
-                <span className={`font-semibold ${hotnessColor}`}>
-                    🔥 {data.hotness.toFixed(2)}
-                </span>
+            {/* IMAGE */}
+            <div className="h-40 bg-slate-200">
+                {image && (
+                    <img
+                        src={image}
+                        alt={topic}
+                        className="h-full w-full object-cover"
+                    />
+                )}
             </div>
 
-
-            <div className="mt-3 flex items-center justify-between text-sm">
-                <span className="font-medium text-slate-700">
-                    Velocity
-                </span>
-                <span className="text-brand font-semibold">
-                    ⚡ {data.velocity.toFixed(2)}
-                </span>
-                <span className={`text-xs px-2 py-1 rounded-full
-  ${data.status === "breaking" ? "bg-red-100 text-red-700" :
-                        data.status === "trending" ? "bg-orange-100 text-orange-700" :
-                            "bg-slate-100 text-slate-600"}`}>
-                    {data.status.toUpperCase()}
+            {/* CONTENT */}
+            <div className="p-5 space-y-3">
+                <span className="text-xs font-semibold text-red-600">
+                    🔥 {article_count}+ articles
                 </span>
 
+                <h4 className="text-xl font-semibold capitalize group-hover:text-brand">
+                    {topic}
+                </h4>
+
+                <p className="text-sm text-slate-600 line-clamp-2">
+                    {getTopicDescription(
+                        { topic, article_count, insight },
+                        "trending"
+                    )}
+                </p>
+
+                <span className="text-sm text-brand font-medium">
+                    Read →
+                </span>
             </div>
-        </div>
+        </article>
     );
 }

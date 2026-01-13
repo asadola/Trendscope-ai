@@ -1,3 +1,6 @@
+from datetime import datetime, timezone
+
+from email.mime import text
 import re
 from langdetect import detect, LangDetectException
 
@@ -25,9 +28,11 @@ class TextCleaner(BaseTransformer):
             return None
     
     def transform(self, event: RawEvent) -> CleanEvent:
-        cleaned = self.clean_text(event.content)
-        lang = self.detect_language(cleaned) if cleaned else None
+    # 🔥 FALLBACK LOGIC
+        base_text = event.content or event.title or ""
 
+        cleaned = self.clean_text(base_text)
+        lang = self.detect_language(cleaned) if cleaned else None
 
         topic_data = classify_topic(cleaned)
 
@@ -39,12 +44,13 @@ class TextCleaner(BaseTransformer):
             language=lang,
             timestamp=event.timestamp,
             published_at=event.published_at,
+            ingested_at=datetime.utcnow(),
             engagement=event.engagement,
             url=event.url,
-            topic=topic_data["category"],   # ✅ NOW EXECUTES
+            topic=topic_data["category"],
             metadata={
-                **(event.metadata or {}),
-                "keywords": topic_data["keywords"],
-                "confidence": topic_data["confidence"],
-            },
-        )
+            **(event.metadata or {}),
+            "keywords": topic_data["keywords"],
+            "confidence": topic_data["confidence"],
+        },
+    )

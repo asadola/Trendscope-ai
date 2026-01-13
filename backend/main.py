@@ -1,15 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import router
-from app.api.topics import topic_router
+from app.api.topics import router as topics_router
 
 app = FastAPI(
     title="TrendScope AI",
     description="AI-powered trend intelligence platform",
-    version="1.0.0",
+    version="v2.2.0",
 )
 
-# ✅ ADD THIS BLOCK
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -21,6 +20,5 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ✅ ROUTES
 app.include_router(router)
-app.include_router(topic_router)  # Include the topic router
+app.include_router(topics_router)
